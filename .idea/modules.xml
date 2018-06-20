@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/speedy-module-common/speedy-module-common.iml" filepath="$PROJECT_DIR$/speedy-module-common/speedy-module-common.iml" />
+      <module fileurl="file://$PROJECT_DIR$/speedy-module-data-orm/speedy-module-data-orm.iml" filepath="$PROJECT_DIR$/speedy-module-data-orm/speedy-module-data-orm.iml" />
+      <module fileurl="file://$PROJECT_DIR$/speedy-project-starter.iml" filepath="$PROJECT_DIR$/speedy-project-starter.iml" />
+    </modules>
+  </component>
+</project>
