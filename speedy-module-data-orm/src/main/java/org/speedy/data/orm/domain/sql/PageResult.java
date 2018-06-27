@@ -1,6 +1,7 @@
 package org.speedy.data.orm.domain.sql;
 
 import lombok.Data;
+import lombok.Getter;
 
 import java.util.List;
 
@@ -12,68 +13,43 @@ import java.util.List;
 @Data
 public class PageResult {
 
-	private PageInfo pageInfo;
-	private List<?> pageData;
-	private int first;
-	private int front;
-	private int next;
-	private int last;
-	private long totalCount;
+    private PageInfo pageInfo;
+    private List<?> data;
+    private List<String> titles;
+    private long totalCount;
 
-	public PageInfo getPageInfo() {
-		return pageInfo;
-	}
+    private PageResult() {
+    }
 
-	public void setPageInfo(PageInfo pageInfo) {
-		this.pageInfo = pageInfo;
-	}
+    public static class Builder {
+        private PageResult pageResult;
 
-	public List<?> getPageData() {
-		return pageData;
-	}
+        private Builder() {
+            this.pageResult = new PageResult();
+        }
 
-	public void setPageData(List<?> pageData) {
-		this.pageData = pageData;
-	}
+        public static Builder start() {
+            return new Builder();
+        }
 
-	public int getFirst() {
-		return first;
-	}
+        public Builder fillData(List<?> data) {
+            this.pageResult.data = data;
+            return this;
+        }
 
-	public void setFirst(int first) {
-		this.first = first;
-	}
+        public Builder fillCount(long totalCount) {
+            this.pageResult.totalCount = totalCount;
+            return this;
+        }
 
-	public int getFront() {
-		return front;
-	}
+        public Builder fillPageInfo(PageInfo pageInfo) {
+            this.pageResult.pageInfo = pageInfo;
+            return this;
+        }
 
-	public void setFront(int front) {
-		this.front = front;
-	}
-
-	public int getNext() {
-		return next;
-	}
-
-	public void setNext(int next) {
-		this.next = next;
-	}
-
-	public int getLast() {
-		return last;
-	}
-
-	public void setLast(int last) {
-		this.last = last;
-	}
-
-	public long getTotalCount() {
-		return totalCount;
-	}
-
-	public void setTotalCount(long totalCount) {
-		this.totalCount = totalCount;
-	}
-
+        public PageResult complete() {
+            this.pageResult.pageInfo.setTotalCount(this.pageResult.totalCount);
+            return pageResult;
+        }
+    }
 }

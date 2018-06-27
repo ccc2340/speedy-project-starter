@@ -9,9 +9,9 @@ import org.springframework.util.Assert;
  */
 public class AssertUtils {
 
-	public static void notNull(Object... objects) {
-		for (Object o : objects) {
-			Assert.notNull(o, "[Assertion failed] - this argument must not be null");
-		}
-	}
+    public static void notNull(Object... objects) {
+        for (Object o : objects) {
+            Assert.notNull(o, "[Assertion failed] - this argument must not be null");
+        }
+    }
 }

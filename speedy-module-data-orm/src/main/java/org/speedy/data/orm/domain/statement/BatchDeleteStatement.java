@@ -26,7 +26,6 @@ public class BatchDeleteStatement extends BatchStatement {
         this.sql = stringBuilder.append("delete from ").append(target)
                 .append(" where ").append(primaryFieldName)
                 .append(" in ").append(batchWhereString).toString();
-
         this.args.addAll(batchWhereFieldValues);
 
         return this;

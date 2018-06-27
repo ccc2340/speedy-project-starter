@@ -71,5 +71,4 @@ public abstract class BatchStatement extends SqlStatement {
 		this.batchWhereFieldValues = new ArrayList<>(batchObjects.length);
 		this.batchPlaceholderList = new ArrayList<>(batchObjects.length);
 	}
-
 }

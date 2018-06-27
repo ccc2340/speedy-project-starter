@@ -13,5 +13,4 @@ import java.lang.annotation.*;
 public @interface MappingClass {
 
     Class<?> clazz();
-
 }

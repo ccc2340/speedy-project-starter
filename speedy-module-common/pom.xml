@@ -15,6 +15,9 @@
     <properties>
         <!-- jpa注解依赖包 -->
         <hibernate-jpa.version>1.0.0.Final</hibernate-jpa.version>
+
+        <!-- 七牛sdk依赖包 -->
+        <qiniu-sdk.version>7.2.13</qiniu-sdk.version>
     </properties>
 
     <dependencies>
@@ -22,6 +25,11 @@
             <groupId>org.hibernate.javax.persistence</groupId>
             <artifactId>hibernate-jpa-2.1-api</artifactId>
             <version>${hibernate-jpa.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.qiniu</groupId>
+            <artifactId>qiniu-java-sdk</artifactId>
+            <version>${qiniu-sdk.version}</version>
         </dependency>
     </dependencies>
 

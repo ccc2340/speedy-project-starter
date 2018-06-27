@@ -1,7 +1,14 @@
 package org.speedy.data.orm;
 
+import org.speedy.data.orm.repository.RepositoryTemplate;
+import org.speedy.data.orm.repository.impl.RepositoryTemplateImpl;
+import org.speedy.data.orm.util.DatabaseValueConverter;
+import org.speedy.data.orm.util.MysqlSqlBuilder;
+import org.speedy.data.orm.util.SqlBuilder;
+import org.speedy.data.orm.util.SqlExecutor;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.Bean;
 
 /**
  * @Description
@@ -13,5 +20,25 @@ public class SpeedyDataOrmApplication {
 
     public static void main(String[] args) {
         SpringApplication.run(SpeedyDataOrmApplication.class, args);
+    }
+
+    @Bean
+    public SqlBuilder sqlBuilder() {
+        return new MysqlSqlBuilder();
+    }
+
+    @Bean
+    public SqlExecutor sqlExecutor() {
+        return new SqlExecutor();
+    }
+
+    @Bean
+    public DatabaseValueConverter valueConverter() {
+        return new DatabaseValueConverter();
+    }
+
+    @Bean
+    public RepositoryTemplate repositoryTemplate() {
+        return new RepositoryTemplateImpl();
     }
 }

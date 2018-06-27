@@ -17,79 +17,79 @@ import org.speedy.data.orm.domain.sql.SqlCombo;
  */
 public abstract class SqlStatement {
 
-	// 操作目标
-	String target;
-	StringBuilder stringBuilder;
+    // 操作目标
+    String target;
+    StringBuilder stringBuilder;
 
-	// sql语句
-	String sql;
-	// 参数集合
-	List<Object> args;
+    // sql语句
+    String sql;
+    // 参数集合
+    List<Object> args;
 
-	public String getSql() {
-		return sql;
-	}
+    public String getSql() {
+        return sql;
+    }
 
-	public List<Object> getArgs() {
-		return args;
-	}
+    public List<Object> getArgs() {
+        return args;
+    }
 
-	// 条件字段名称及数据列表
-	private List<String> whereFieldNameList;
-	List<Object> whereFieldValueList;
+    // 条件字段名称及数据列表
+    List<String> whereFieldNameList;
+    List<Object> whereFieldValueList;
 
-	String whereFieldNameString;
+    String whereFieldNameString;
 
-	SqlStatement() {
-		this.args = new LinkedList<>();
-		this.stringBuilder = new StringBuilder();
-		this.whereFieldNameList = new LinkedList<>();
-		this.whereFieldValueList = new LinkedList<>();
-	}
+    SqlStatement() {
+        this.args = new LinkedList<>();
+        this.stringBuilder = new StringBuilder();
+        this.whereFieldNameList = new LinkedList<>();
+        this.whereFieldValueList = new LinkedList<>();
+    }
 
-	void extractWhere(Object object) {
-		Field[] fields = object.getClass().getDeclaredFields();
+    // 这个方法是根据实体类来提取条件
+    void extractWhere(Object object) {
+        Field[] fields = object.getClass().getDeclaredFields();
 
-		for (Field field : fields) {
-			Object fieldValue = ReflectUtils.methodGetFieldValue(object, field);
-			if (fieldValue != null) {
-				whereFieldNameList.add(field.getName() + " = " + getPlaceholder());
-				whereFieldValueList.add(fieldValue);
-			}
-		}
+        for (Field field : fields) {
+            Object fieldValue = ReflectUtils.methodGetFieldValue(object, field);
+            if (fieldValue != null) {
+                whereFieldNameList.add(field.getName() + " = " + getPlaceholder());
+                whereFieldValueList.add(fieldValue);
+            }
+        }
 
-		// 如果拼接的条件个数为0，说明未设置条件，则设置默认条件
-		if (whereFieldNameList.isEmpty()) {
-			whereFieldNameString = " 1=1 ";
-			return;
-		}
+        // 如果拼接的条件个数为0，说明未设置条件，则设置默认条件
+        if (whereFieldNameList.isEmpty()) {
+            whereFieldNameString = " 1=1 ";
+        } else {
+            whereFieldNameString = whereFieldNameList.stream().collect(Collectors.joining(" and "));
+        }
+    }
 
-		whereFieldNameString = whereFieldNameList.stream().collect(Collectors.joining(" and "));
-	}
+    /* 设置数据库操作目标 */
+    /* 1、首先查找@Table注解的name属性值 */
+    void setDatabaseTarget(Object object) {
+        Table annotation = object.getClass().getAnnotation(Table.class);
+        this.target = annotation.name();
+    }
 
-	/* 设置数据库操作目标 */
-	/* 1、首先查找@Table注解的name属性值 */
-	void setDatabaseTarget(Object object) {
-		Table annotation = object.getClass().getAnnotation(Table.class);
-		this.target = annotation.name();
-	}
+    /* 获取字段的名称 */
+    String getDatabaseFieldName(Field field) {
+        return "`" + field.getName() + "`";
+    }
 
-	/* 获取字段的名称 */
-	String getDatabaseFieldName(Field field) {
-		return "`" + field.getName() + "`";
-	}
+    /* sql语句中的占位符 */
+    String getPlaceholder() {
+        return "?";
+    }
 
-	/* sql语句中的占位符 */
-	String getPlaceholder() {
-		return "?";
-	}
+    /* 完成sql语句及参数的构造 */
+    abstract SqlStatement complete();
 
-	/* 完成sql语句及参数的构造 */
-	abstract SqlStatement complete();
-
-	/* 创建SqlCombo对象 */
-	public final SqlCombo combo() {
-		SqlStatement sqlStatement = this.complete();
-		return SqlCombo.from(sqlStatement);
-	}
+    /* 创建SqlCombo对象 */
+    public final SqlCombo combo() {
+        SqlStatement sqlStatement = this.complete();
+        return SqlCombo.from(sqlStatement);
+    }
 }
