@@ -17,6 +17,13 @@ public class PageResult {
     private List<?> data;
     private List<String> titles;
     private long totalCount;
+    private int titleCount;
+    private String cost;
+
+    public void setTitles(List<String> titles) {
+        this.titles = titles;
+        this.titleCount = titles.size();
+    }
 
     private PageResult() {
     }

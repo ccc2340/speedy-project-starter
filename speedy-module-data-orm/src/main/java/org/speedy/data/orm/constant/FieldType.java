@@ -7,5 +7,5 @@ package org.speedy.data.orm.constant;
  */
 public enum FieldType {
 
-    DATE, DATETIME, TIME, MONEY,TEXT
+    DATE, DATETIME, TIME, MONEY, TEXT, BUTTON
 }
