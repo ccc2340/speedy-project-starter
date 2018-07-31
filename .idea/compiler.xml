@@ -8,11 +8,13 @@
         <outputRelativeToContentRoot value="true" />
         <module name="speedy-module-common" />
         <module name="speedy-module-data-orm" />
+        <module name="speedy-module-file" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
       <module name="speedy-module-common" target="1.8" />
       <module name="speedy-module-data-orm" target="1.8" />
+      <module name="speedy-module-file" target="1.8" />
       <module name="speedy-project-starter" target="1.8" />
     </bytecodeTargetLevel>
   </component>

@@ -1,12 +1,13 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+         http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.speedy.learn</groupId>
     <artifactId>speedy-project-starter</artifactId>
-    <version>0.0.2-SNAPSHOT</version>
+    <version>20180730.001-SNAPSHOT</version>
 
     <packaging>pom</packaging>
 
@@ -20,7 +21,7 @@
     <parent>
         <groupId>org.springframework.cloud</groupId>
         <artifactId>spring-cloud-starter-parent</artifactId>
-        <version>Edgware.SR3</version>
+        <version>Finchley.RELEASE</version>
         <relativePath/>
     </parent>
 
@@ -79,11 +80,11 @@
     </dependencies>
 
     <repositories>
-        <repository>
-            <id>wastair</id>
-            <name>wastair</name>
-            <url>http://10.176.3.162:8081/nexus/content/groups/public/</url>
-        </repository>
+        <!--<repository>-->
+        <!--<id>wastair</id>-->
+        <!--<name>wastair</name>-->
+        <!--<url>http://10.176.3.162:8081/nexus/content/groups/public/</url>-->
+        <!--</repository>-->
         <repository>
             <id>alimaven</id>
             <name>alimaven</name>
@@ -121,11 +122,17 @@
                 <artifactId>speedy-module-data-orm</artifactId>
                 <version>${project.version}</version>
             </dependency>
+            <dependency>
+                <groupId>org.speedy.learn</groupId>
+                <artifactId>speedy-module-file</artifactId>
+                <version>${project.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
     <modules>
         <module>speedy-module-common</module>
         <module>speedy-module-data-orm</module>
+        <module>speedy-module-file</module>
     </modules>
 </project>

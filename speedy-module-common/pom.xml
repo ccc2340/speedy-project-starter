@@ -7,7 +7,7 @@
     <parent>
         <groupId>org.speedy.learn</groupId>
         <artifactId>speedy-project-starter</artifactId>
-        <version>0.0.2-SNAPSHOT</version>
+        <version>20180730.001-SNAPSHOT</version>
     </parent>
 
     <artifactId>speedy-module-common</artifactId>
@@ -26,8 +26,19 @@
     <dependencies>
         <dependency>
             <groupId>org.hibernate.javax.persistence</groupId>
-            <artifactId>hibernate-jpa-2.1-api</artifactId>
-            <version>${hibernate-jpa.version}</version>
+            <artifactId>hibernate-jpa-2.0-api</artifactId>
+            <version>1.0.1.Final</version>
+        </dependency>
+
+        <!-- https://mvnrepository.com/artifact/org.springframework.data/spring-data-commons -->
+        <dependency>
+            <groupId>org.springframework.data</groupId>
+            <artifactId>spring-data-commons</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-jdbc</artifactId>
         </dependency>
 
         <dependency>

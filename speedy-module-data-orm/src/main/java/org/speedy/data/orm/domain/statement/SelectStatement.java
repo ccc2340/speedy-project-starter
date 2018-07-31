@@ -1,18 +1,11 @@
 package org.speedy.data.orm.domain.statement;
 
-import org.speedy.common.util.ModelUtils;
-import org.speedy.common.util.ReflectUtils;
-import org.speedy.data.orm.annotation.ConditionField;
-import org.speedy.data.orm.domain.base.QueryCondition;
 import org.speedy.data.orm.domain.sql.SqlQueryParameter;
-import org.speedy.data.orm.exception.SpeedyDataAccessException;
-import org.springframework.util.StringUtils;
+import org.springframework.data.domain.Sort;
+import org.springframework.util.Assert;
 
-import javax.persistence.Table;
-import java.io.Serializable;
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Field;
-import java.util.*;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.stream.Collectors;
 
 /**
@@ -23,13 +16,21 @@ import java.util.stream.Collectors;
 public class SelectStatement extends SqlStatement {
 
     private SqlQueryParameter queryParameter;
+    private Class<?> targetClass;
+    private String selectFields;
+    private String where;
+    private String order;
+    private String page;
 
     public SelectStatement(SqlQueryParameter queryParameter) {
+        Assert.notNull(queryParameter, "SqlQueryParameter is null");
+
         this.queryParameter = queryParameter;
+        this.targetClass = queryParameter.getTargetClass();
     }
 
-    public SelectStatement from() {
-        this.target = queryParameter.getParameterClass().getAnnotation(Table.class).name();
+    private SelectStatement from() {
+        setDatabaseTarget(targetClass);
         return this;
     }
 
@@ -45,124 +46,55 @@ public class SelectStatement extends SqlStatement {
         }
     }
 
-    /* 查询类型 */
-    private String selectFields;
-
-    public SelectStatement select() {
+    private SelectStatement select() {
         this.selectFields = queryParameter.getSelectType().fields;
         return this;
     }
 
     /* 设置查询条件 */
-    public SelectStatement where() {
-        switch (queryParameter.getParameterType()) {
-            case EXAMPLE:
-                extractWhere(queryParameter.getParameterObject());
-                return this;
-            case CONDITION:
-                extractWhereFromCondition(queryParameter.getParameterObject());
-                return this;
-            case MULTI_PRIMARY:
-                extractWhereFromMultiPrimary(queryParameter.getParameterObject());
-                return this;
-            case CLASS:
-                extractWhereFromClass();
-                return this;
-            default:
-                throw new SpeedyDataAccessException(queryParameter.getParameterType().name());
+    private SelectStatement where() {
+        where = queryParameter.getCondition().toString();
+        return this;
+    }
+
+    /* 设置排序 */
+    private SelectStatement orderBy() {
+        List<Sort.Order> orders = queryParameter.getOrders();
+        if (orders == null || orders.isEmpty()) {
+            this.order = "";
         }
-    }
-
-    private void extractWhereFromClass() {
-    }
-
-    private List<String> wherePlaceholderList = new ArrayList<>();
-
-    private void extractWhereFromMultiPrimary(Object parameterObject) {
-        Field primaryField = ModelUtils.getPrimaryField(queryParameter.getParameterClass());
-        this.whereFieldNameList.add(getDatabaseFieldName(primaryField));
-
-        Set<Serializable> primarySet = new HashSet<>((Collection) parameterObject);
-        for (Serializable s : primarySet) {
-            whereFieldValueList.add(s);
-            wherePlaceholderList.add(getPlaceholder());
+        else {
+            List<String> orderStrings = new LinkedList<>();
+            orders.forEach(order -> {
+                orderStrings.add(order.getProperty() + " " + order.getDirection().name());
+            });
+            String orderString = orderStrings.stream().collect(Collectors.joining(","));
+            this.order = "order by " + orderString;
         }
+        return this;
     }
 
-    private void extractWhereFromCondition(Object conditionObject) {
-        Field[] fields = conditionObject.getClass().getDeclaredFields();
-        for (Field f : fields) {
-            Object fieldValue = ReflectUtils.directGetFieldValue(conditionObject, f);
-
-            // 如果值为null或者为空白字符串，则跳过，不需要设置这个条件
-            if (StringUtils.isEmpty(fieldValue)) {
-                continue;
-            }
-
-            ConditionField annotation = f.getAnnotation(ConditionField.class);
-            String fieldName = StringUtils.isEmpty(annotation.field()) ? f.getName() : annotation.field();
-            jointConditionField(fieldName, annotation.type(), fieldValue);
-        }
-    }
-
-    // 拼接条件字段
-    private void jointConditionField(String field, QueryCondition.Type type, Object value) {
-        switch (type) {
-            // 对于这2种情况，不需要拼接数值
-            case NULL:
-            case NOT_NULL:
-                whereFieldNameList.add(String.format("%s %s", field, type.getSymbol()));
-                break;
-            // 对于like的情况，需要拼接占位符
-            case LIKE:
-                value = getLikePlaceholder() + value + getLikePlaceholder();
-            default:
-                whereFieldNameList.add(String.format("%s %s %s", field, type.getSymbol(), getPlaceholder()));
-                whereFieldValueList.add(value);
-        }
-    }
-
-    private String getLikePlaceholder() {
-        return "%";
-    }
-
-    @Override
-    SqlStatement complete() {
-        switch (queryParameter.getParameterType()) {
-            case MULTI_PRIMARY: {
-                String placeholderString = wherePlaceholderList.stream().collect(Collectors.joining(",", "(", ")")).toString();
-                whereFieldNameString = whereFieldNameList.get(0) + " in " + placeholderString;
-                break;
-            }
-            case CLASS: {
-                whereFieldNameString = " 1=1 ";
-                break;
-            }
-            default: {
-                // 如果拼接的条件个数为0，说明未设置条件，则设置默认条件
-                if (whereFieldNameList.isEmpty()) {
-                    whereFieldNameString = " 1=1 ";
-                }
-                else {
-                    whereFieldNameString = whereFieldNameList.stream().collect(Collectors.joining(" and "));
-                }
-            }
-        }
-
-        stringBuilder.append("select ").append(selectFields)
-                .append(" from ").append(target)
-                .append(" where ").append(whereFieldNameString);
-
+    private SelectStatement page() {
         /* 如果查询参数中需要分页，则加上分页的数据 */
         if (queryParameter.getPageInfo().isPage()) {
             int offset = queryParameter.getPageInfo().getOffset();
             int cpp = queryParameter.getPageInfo().getCpp();
-            String pageSql = String.format(" limit %d, %d", offset, cpp);
-            stringBuilder.append(pageSql);
+            this.page = String.format("limit %d, %d", offset, cpp);
+        }
+        else {
+            this.page = "";
         }
 
-        this.sql = stringBuilder.toString();
-        this.args.addAll(whereFieldValueList);
+        return this;
+    }
+
+    @Override
+    SqlStatement complete() {
+        this.select().from().where().orderBy().page();
+
+        this.sql = String.format("select %s from %s where %s %s %s", selectFields, target, where, order, page);
+
+        this.args.addAll(queryParameter.getCondition().getArgs());
 
         return this;
     }

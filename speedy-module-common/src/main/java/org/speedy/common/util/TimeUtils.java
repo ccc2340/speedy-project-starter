@@ -4,7 +4,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
-import java.time.temporal.Temporal;
 import java.util.Locale;
 
 /**
@@ -39,7 +38,8 @@ public class TimeUtils {
     public static LocalDate parseDate(String content, String format) {
         if (DATE_FORMAT.equals(format)) {
             return parseDate(content);
-        } else {
+        }
+        else {
             return LocalDate.parse(content, buildFormatter(format));
         }
     }
@@ -57,7 +57,8 @@ public class TimeUtils {
     public static LocalDateTime parseDateTime(String content, String format) {
         if (DATETIME_FORMAT.equals(format)) {
             return parseDateTime(content);
-        } else {
+        }
+        else {
             return LocalDateTime.parse(content, buildFormatter(format));
         }
     }
@@ -65,15 +66,21 @@ public class TimeUtils {
     public static String formatString(LocalDate date, String format) {
         if (DATE_FORMAT.equals(format)) {
             return DATE_FORMATTER.format(date);
-        } else {
+        }
+        else {
             return buildFormatter(format).format(date);
         }
+    }
+
+    public static String formatString(LocalDateTime datetime) {
+        return formatString(datetime, DATETIME_FORMAT);
     }
 
     public static String formatString(LocalDateTime datetime, String format) {
         if (DATETIME_FORMAT.equals(format)) {
             return DATETIME_FORMATTER.format(datetime);
-        } else {
+        }
+        else {
             return buildFormatter(format).format(datetime);
         }
     }

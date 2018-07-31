@@ -22,6 +22,6 @@ public class NoFieldAccessMethodException extends RuntimeException {
 	}
 
 	private NoFieldAccessMethodException(Class<?> clazz, Field field, String type) {
-		super(String.format("field [%s] in class [%s] no [%s] method ", field.getName(), clazz.getName(), type));
+		super(String.format("field [%s] in class [%s] no [%s] action ", field.getName(), clazz.getName(), type));
 	}
 }

@@ -1,8 +1,7 @@
 package org.speedy.data.orm;
 
+import org.speedy.data.orm.convertor.DatabaseConverter;
 import org.speedy.data.orm.repository.RepositoryTemplate;
-import org.speedy.data.orm.repository.impl.RepositoryTemplateImpl;
-import org.speedy.data.orm.util.DatabaseValueConverter;
 import org.speedy.data.orm.util.MysqlSqlBuilder;
 import org.speedy.data.orm.util.SqlBuilder;
 import org.speedy.data.orm.util.SqlExecutor;
@@ -33,12 +32,12 @@ public class SpeedyDataOrmApplication {
     }
 
     @Bean
-    public DatabaseValueConverter valueConverter() {
-        return new DatabaseValueConverter();
+    public DatabaseConverter valueConverter() {
+        return new DatabaseConverter();
     }
 
     @Bean
     public RepositoryTemplate repositoryTemplate() {
-        return new RepositoryTemplateImpl();
+        return new RepositoryTemplate();
     }
 }

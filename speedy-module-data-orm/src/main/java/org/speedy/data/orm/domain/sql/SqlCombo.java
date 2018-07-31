@@ -1,13 +1,13 @@
 package org.speedy.data.orm.domain.sql;
 
-import java.util.ArrayList;
-import java.util.List;
-
+import lombok.Data;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.speedy.data.orm.domain.statement.SqlStatement;
 
-import lombok.Data;
+import java.util.Collection;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * @Description
@@ -19,31 +19,42 @@ public class SqlCombo {
 
     private static Logger logger = LoggerFactory.getLogger(SqlCombo.class);
 
-    private String sql;
-    private List<Object> args;
+    protected final String sql;
+    private final List<Object> args;
+
+    SqlCombo(String sql) {
+        this.args = new LinkedList<>();
+        this.sql = sql;
+    }
 
     public SqlCombo(String sql, List<Object> args) {
-        this.sql = sql;
-        this.args = args;
-
-        logger.info("sql @ " + sql);
-        logger.info("args @ " + args);
+        this(sql);
+        this.args.addAll(args);
     }
 
     public static SqlCombo from(SqlStatement sqlStatement) {
-        List<Object> argsList = new ArrayList<>();
+        SqlCombo sqlCombo = new SqlCombo(sqlStatement.getSql());
+
         /* 将参数值中的enum值转换为String */
         for (Object e : sqlStatement.getArgs()) {
             if (e == null) {
-                argsList.add(null);
+                sqlCombo.args.add(null);
             }
             else if (e.getClass().isEnum()) {
-                argsList.add(e.toString());
+                sqlCombo.args.add(e.toString());
+            }
+            else if (Collection.class.isAssignableFrom(e.getClass())) {
+                Collection collection = (Collection) e;
+                sqlCombo.args.addAll(collection);
             }
             else {
-                argsList.add(e);
+                sqlCombo.args.add(e);
             }
         }
-        return new SqlCombo(sqlStatement.getSql(), argsList);
+
+        logger.info("sql @ " + sqlCombo.sql);
+        logger.info("args @ " + sqlCombo.args);
+
+        return sqlCombo;
     }
 }

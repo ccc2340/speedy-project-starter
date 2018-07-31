@@ -1,8 +1,6 @@
 package org.speedy.data.orm.domain.sql;
 
 import lombok.Data;
-import lombok.Getter;
-import org.springframework.beans.factory.annotation.Value;
 
 /**
  * @Description

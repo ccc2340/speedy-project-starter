@@ -1,5 +1,8 @@
 package org.speedy.data.orm.domain.statement;
 
+import org.speedy.data.orm.domain.sql.SqlCondition;
+import org.springframework.util.Assert;
+
 /**
  * @Description
  * @Author chenguangxue
@@ -7,25 +10,35 @@ package org.speedy.data.orm.domain.statement;
  */
 public class DeleteStatement extends SqlStatement {
 
+    private SqlCondition deleteCondition;
+    private Class<?> deleteClass;
+    private String where;
+
+    public DeleteStatement(SqlCondition condition) {
+        Assert.notNull(condition, "删除条件为null");
+
+        this.deleteCondition = condition;
+        this.deleteClass = condition.getTargetClass();
+    }
+
     /* 设置数据库操作目标 */
-    public DeleteStatement delete_from(Object object) {
-        setDatabaseTarget(object);
+    public DeleteStatement delete_from() {
+        setDatabaseTarget(deleteClass);
         return this;
     }
 
     /* 设置删除条件 */
-    public DeleteStatement where(Object object) {
-        extractWhere(object);
+    public DeleteStatement where() {
+        where = deleteCondition.toString();
         return this;
     }
 
     @Override
     SqlStatement complete() {
-        // 组装sql语句
-        this.sql = stringBuilder.append("delete from ").append(target).
-                append(" where ").append(whereFieldNameString).toString();
+        this.delete_from().where();
 
-        this.args.addAll(whereFieldValueList);
+        this.sql = String.format("delete from %s where %s", target, where);
+        this.args.addAll(deleteCondition.getArgs());
 
         return this;
     }

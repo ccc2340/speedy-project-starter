@@ -1,12 +1,7 @@
 package org.speedy.data.orm.domain.statement;
 
-import java.lang.reflect.Field;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.stream.Collectors;
-
-import org.speedy.common.util.ModelUtils;
-import org.speedy.common.util.ReflectUtils;
+import org.speedy.data.orm.domain.sql.SqlUpdateParameter;
+import org.springframework.util.Assert;
 
 /**
  * @Description 修改语句模板
@@ -15,57 +10,45 @@ import org.speedy.common.util.ReflectUtils;
  */
 public class UpdateStatement extends SqlStatement {
 
-	public UpdateStatement() {
-		setFieldNameList = new LinkedList<>();
-		setFieldValueList = new LinkedList<>();
-	}
+    private Class<?> updateClass;
+    private SqlUpdateParameter updateParameter;
+    private String set;
+    private String where;
 
-	/* 设置操作目标 */
-	public UpdateStatement update(Object object) {
-		setDatabaseTarget(object);
-		return this;
-	}
+    public UpdateStatement(SqlUpdateParameter updateParameter) {
+        Assert.notNull(updateParameter, "SqlUpdateParameter为null");
 
-	/* 需要修改的字段名称及数据列表 */
-	private List<String> setFieldNameList;
-	private List<Object> setFieldValueList;
+        this.updateClass = updateParameter.getTargetClass();
+        this.updateParameter = updateParameter;
+    }
 
-	private String setFieldNameString;
+    /* 设置操作目标 */
+    public UpdateStatement update() {
+        setDatabaseTarget(updateClass);
+        return this;
+    }
 
-	/* 设置变更数据:提取除主键之外的字段列表 */
-	public UpdateStatement set(Object object) {
-		Field[] fields = object.getClass().getDeclaredFields();
-		Field primaryField = ModelUtils.getPrimaryField(object.getClass());
-		for (Field field : fields) {
-			if (field.equals(primaryField)) {
-				continue;
-			}
-			Object fieldValue = ReflectUtils.methodGetFieldValue(object, field);
-			setFieldNameList.add(getDatabaseFieldName(field) + " = " + getPlaceholder());
-			setFieldValueList.add(fieldValue);
-		}
+    /* 设置变更数据:提取除主键之外的字段列表 */
+    public UpdateStatement set() {
+        set = updateParameter.getUpdate().toString();
+        return this;
+    }
 
-		setFieldNameString = setFieldNameList.stream().collect(Collectors.joining(","));
-		return this;
-	}
+    /* 设置条件数据:只能使用主键作为条件 */
+    public UpdateStatement where() {
+        where = updateParameter.getCondition().toString();
+        return this;
+    }
 
-	/* 设置条件数据:只能使用主键作为条件 */
-	public UpdateStatement where(Object object) {
-		Field primaryField = ModelUtils.getPrimaryField(object.getClass());
-		this.whereFieldNameString = getDatabaseFieldName(primaryField) + "=" + getPlaceholder();
+    @Override
+    SqlStatement complete() {
+        this.update().set().where();
 
-		this.whereFieldValueList.add(ReflectUtils.directGetFieldValue(object, primaryField));
-		return this;
-	}
+        this.sql = String.format("update %s set %s where %s", target, set, where);
 
-	@Override
-	SqlStatement complete() {
-		this.sql = stringBuilder.append("update ").append(target).append(" set ").append(setFieldNameString)
-				.append(" where ").append(whereFieldNameString).toString();
+        this.args.addAll(updateParameter.getUpdate().getArgs());
+        this.args.addAll(updateParameter.getCondition().getArgs());
 
-		this.args.addAll(setFieldValueList);
-		this.args.addAll(whereFieldValueList);
-
-		return this;
-	}
+        return this;
+    }
 }

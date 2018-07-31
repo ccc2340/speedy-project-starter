@@ -1,7 +1,6 @@
 package org.speedy.data.orm.util;
 
-import org.speedy.data.orm.domain.sql.SqlCombo;
-import org.speedy.data.orm.domain.sql.SqlQueryParameter;
+import org.speedy.data.orm.domain.sql.*;
 
 /**
  * @Description SQL命令创建器
@@ -11,16 +10,13 @@ import org.speedy.data.orm.domain.sql.SqlQueryParameter;
 public interface SqlBuilder {
 
     /* 创建插入语句 */
-    SqlCombo createInsertSql(Object object);
-
-    /* 创建批量插入语句 */
-    SqlCombo createBatchInsertSql(Object[] objects);
+    NamedSqlCombo createInsertSql(Object object);
 
     /* 创建删除语句 */
-    SqlCombo createDeleteSql(Object object);
+    SqlCombo createDeleteSql(SqlCondition deleteCondition);
 
     /* 创建修改语句 */
-    SqlCombo createUpdateSql(Object object);
+    SqlCombo createUpdateSql(SqlUpdateParameter parameter);
 
     /* 创建查询语句 */
     SqlCombo createSelectSql(SqlQueryParameter parameter);

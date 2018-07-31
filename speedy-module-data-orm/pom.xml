@@ -7,7 +7,7 @@
     <parent>
         <groupId>org.speedy.learn</groupId>
         <artifactId>speedy-project-starter</artifactId>
-        <version>0.0.2-SNAPSHOT</version>
+        <version>20180730.001-SNAPSHOT</version>
     </parent>
 
     <artifactId>speedy-module-data-orm</artifactId>
@@ -18,5 +18,4 @@
             <artifactId>speedy-module-common</artifactId>
         </dependency>
     </dependencies>
-
 </project>

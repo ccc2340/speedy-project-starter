@@ -1,17 +1,12 @@
 package org.speedy.data.orm.domain.sql;
 
+import lombok.Getter;
+import org.speedy.data.orm.domain.statement.SelectStatement;
+import org.springframework.data.domain.Sort;
+
 import java.io.Serializable;
-import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
-
-import javax.persistence.criteria.Order;
-
-import org.speedy.data.orm.annotation.MappingClass;
-import org.speedy.data.orm.domain.base.QueryCondition;
-import org.speedy.data.orm.domain.statement.SelectStatement;
-
-import lombok.Getter;
 
 /**
  * @Description SQL查询语句参数
@@ -21,16 +16,17 @@ import lombok.Getter;
 @Getter
 public class SqlQueryParameter {
 
-    /* 包含条件数据的对象 */
-    private Object parameterObject;
-    private ParameterType parameterType;
-    private Class<?> parameterClass;
+    /* 操作的目标类型 */
+    private Class<?> targetClass;
+
+    /* sql条件对象 */
+    private SqlCondition condition;
 
     /* 分页数据 */
     private PageInfo pageInfo;
 
     /* 排序数据 */
-    private List<Order> orders;
+    private List<Sort.Order> orders;
 
     /* 是否显示不重复数据 */
     private boolean distinct;
@@ -39,112 +35,86 @@ public class SqlQueryParameter {
     private SelectStatement.SelectType selectType;
 
     // 私有化构造方法，必须使用构造器创建对象
-    private SqlQueryParameter() {
+    private SqlQueryParameter(SqlCondition sqlCondition) {
         this.orders = new LinkedList<>();
         this.selectType = SelectStatement.SelectType.ALL;
         this.pageInfo = PageInfo.noPage();
-        this.parameterType = ParameterType.EXAMPLE;
+        this.distinct = false;
+
+        this.targetClass = sqlCondition.getTargetClass();
+        this.condition = sqlCondition;
     }
 
-    /* 提供一个用于执行count查询的对象 */
+    /* 提供一个用于执行export查询的对象，条件不变，去掉分页数据 */
+    public SqlQueryParameter export() {
+        SqlQueryParameter exportParameter = new SqlQueryParameter(this.condition);
+        exportParameter.selectType = SelectStatement.SelectType.ALL;
+        exportParameter.pageInfo = PageInfo.noPage();
+        exportParameter.distinct = this.distinct;
+        return exportParameter;
+    }
+
+    /* 提供一个用于执行count查询的对象，条件不变 */
     public SqlQueryParameter count() {
-        SqlQueryParameter countQueryParameter = new SqlQueryParameter();
-        countQueryParameter.parameterObject = this.parameterObject;
-        countQueryParameter.parameterType = this.parameterType;
-        countQueryParameter.parameterClass = this.parameterClass;
+        SqlQueryParameter countQueryParameter = new SqlQueryParameter(this.condition);
         countQueryParameter.selectType = SelectStatement.SelectType.COUNT;
+        countQueryParameter.pageInfo = PageInfo.noPage();
+        countQueryParameter.distinct = this.distinct;
         return countQueryParameter;
     }
 
     /* 提供常见参数的静态方法1 */
     public static SqlQueryParameter ofExample(Object example) {
-        return Builder.start().withExample(example).complete();
+        SqlCondition condition = SqlCondition.example(example);
+        return new SqlQueryParameter(condition);
     }
 
     /* 提供常见参数的静态方法2 */
-    public static SqlQueryParameter ofCondition(QueryCondition condition) {
-        return Builder.start().withCondition(condition).complete();
+    public static SqlQueryParameter ofConditionObject(Object conditionObject) {
+        SqlCondition condition = SqlCondition.condition(conditionObject);
+        return new SqlQueryParameter(condition);
     }
 
     /* 提供常见参数的静态方法3 */
     public static SqlQueryParameter ofMultiPrimary(Class<?> clazz, List<Serializable> primaries) {
-        return Builder.start().withMultiPrimary(clazz, primaries).complete();
+        SqlCondition condition = SqlCondition.multiPrimary(clazz, primaries);
+        return new SqlQueryParameter(condition);
     }
 
     /* 提供常见参数的静态方法4 */
     public static SqlQueryParameter ofClass(Class<?> clazz) {
-        return Builder.start().widthClass(clazz).complete();
+        SqlCondition condition = SqlCondition.empty(clazz);
+        return new SqlQueryParameter(condition);
     }
 
-    public enum ParameterType {
-        EXAMPLE, CONDITION, MULTI_PRIMARY, CLASS,
+    /* 提供常见参数的静态方法5 */
+    public static SqlQueryParameter ofSqlCondition(SqlCondition condition) {
+        return new SqlQueryParameter(condition);
     }
 
     public static class Builder {
-        // 构造器也不允许直接创建对象
-        private Builder() {
+        private SqlQueryParameter parameter;
+
+        private Builder(SqlCondition condition) {
+            this.parameter = new SqlQueryParameter(condition);
         }
 
-        private SqlQueryParameter sqlQueryParameter;
+        public static Builder condition(SqlCondition condition) {
+            return new Builder(condition);
+        }
 
-        public Builder withExample(Object example) {
-            this.sqlQueryParameter.parameterObject = example;
-            this.sqlQueryParameter.parameterType = ParameterType.EXAMPLE;
-            this.sqlQueryParameter.parameterClass = example.getClass();
+        public Builder page(PageInfo pageInfo) {
+            this.parameter.pageInfo = pageInfo;
             return this;
         }
 
-        public Builder widthClass(Class<?> clazz) {
-            this.sqlQueryParameter.parameterClass = clazz;
-            this.sqlQueryParameter.parameterType = ParameterType.CLASS;
-            return this;
-        }
-
-        public Builder withMultiPrimary(Class<?> clazz, List<Serializable> primaryList) {
-            this.sqlQueryParameter.parameterObject = primaryList;
-            this.sqlQueryParameter.parameterType = ParameterType.MULTI_PRIMARY;
-            this.sqlQueryParameter.parameterClass = clazz;
-            return this;
-        }
-
-        public Builder withSelectType(SelectStatement.SelectType selectType) {
-            this.sqlQueryParameter.selectType = selectType;
-            return this;
-        }
-
-        public Builder withCondition(QueryCondition condition) {
-            this.sqlQueryParameter.parameterObject = condition;
-            this.sqlQueryParameter.parameterType = ParameterType.CONDITION;
-            MappingClass annotation = condition.getClass().getAnnotation(MappingClass.class);
-            this.sqlQueryParameter.parameterClass = annotation.clazz();
-            return this;
-        }
-
-        public Builder initPageInfo(PageInfo pageInfo) {
-            this.sqlQueryParameter.pageInfo = pageInfo;
-            return this;
-        }
-
-        public Builder withOrders(Order... orders) {
-            if (orders != null && orders.length > 0) {
-                this.sqlQueryParameter.orders.addAll(Arrays.asList(orders));
-            }
-            return this;
-        }
-
-        public Builder needDistinct() {
-            this.sqlQueryParameter.distinct = true;
+        public Builder order(List<Sort.Order> orders) {
+            this.parameter.orders.addAll(orders);
             return this;
         }
 
         public SqlQueryParameter complete() {
-            return this.sqlQueryParameter;
-        }
-
-        public static Builder start() {
-            Builder builder = new Builder();
-            builder.sqlQueryParameter = new SqlQueryParameter();
-            return builder;
+            return this.parameter;
         }
     }
 }

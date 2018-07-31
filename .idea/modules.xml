@@ -4,6 +4,7 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/speedy-module-common/speedy-module-common.iml" filepath="$PROJECT_DIR$/speedy-module-common/speedy-module-common.iml" />
       <module fileurl="file://$PROJECT_DIR$/speedy-module-data-orm/speedy-module-data-orm.iml" filepath="$PROJECT_DIR$/speedy-module-data-orm/speedy-module-data-orm.iml" />
+      <module fileurl="file://$PROJECT_DIR$/speedy-module-file/speedy-module-file.iml" filepath="$PROJECT_DIR$/speedy-module-file/speedy-module-file.iml" />
       <module fileurl="file://$PROJECT_DIR$/speedy-project-starter.iml" filepath="$PROJECT_DIR$/speedy-project-starter.iml" />
     </modules>
   </component>

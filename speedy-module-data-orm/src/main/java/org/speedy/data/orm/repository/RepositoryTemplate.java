@@ -1,42 +1,125 @@
 package org.speedy.data.orm.repository;
 
+import org.speedy.common.util.ModelUtils;
+import org.speedy.data.orm.domain.sql.*;
+import org.speedy.data.orm.util.SqlBuilder;
+import org.speedy.data.orm.util.SqlExecutor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
 import java.io.Serializable;
 import java.util.List;
-import java.util.Optional;
-
-import org.speedy.data.orm.domain.sql.PageResult;
-import org.speedy.data.orm.domain.sql.SqlQueryParameter;
 
 /**
- * @Description
+ * @Description 数据库持久化模板
  * @Author chenguangxue
  * @CreateDate 2018/06/12 10:53
  */
-public interface RepositoryTemplate {
+@Component
+public class RepositoryTemplate {
 
-    /* 保存新对象，返回的对象为保存之后的对象，其中包含主键 */
-    <T> int insert(T t);
+    @Autowired
+    private SqlBuilder builder;
+    @Autowired
+    private SqlExecutor executor;
 
-    <T> int batchInsert(T[] ts);
+    public int insert(Object insertObject) {
+        NamedSqlCombo sqlCombo = builder.createInsertSql(insertObject);
+        return executor.executeNonQueryAndReturnPrimary(sqlCombo);
+    }
 
-    /* 根据主键删除数据 */
-    <T> int deleteByPrimary(Class<T> clazz, Serializable primary);
+    public int delete(SqlCondition condition) {
+        SqlCombo sqlCombo = builder.createDeleteSql(condition);
+        return executor.executeNonQuery(sqlCombo);
+    }
 
-    /* 以主键为条件，修改对象的其他数据 */
-    <T> int updateByPrimary(T t);
+    public int delete(Class<?> clazz, Serializable primary) {
+        SqlCondition condition = SqlCondition.primary(clazz, primary);
+        return delete(condition);
+    }
 
-    /* 以主键为条件，查询符合条件的对象 */
-    <T> Optional<T> selectByPrimary(Class<T> clazz, Serializable primary);
+    public int delete(Object object) {
+        Serializable primaryValue = ModelUtils.getPrimaryValue(object);
+        return delete(object.getClass(), primaryValue);
+    }
 
-    /* 以多个主键为条件，查询符合条件的多个对象 */
-    <T> List<T> selectByPrimaries(Class<T> clazz, List<Serializable> primaries);
+    public int update(Object newObject) {
+        Serializable primaryValue = ModelUtils.getPrimaryValue(newObject);
+        Object oldObject = selectByPrimary(newObject.getClass(), primaryValue);
+        SqlUpdateParameter parameter = SqlUpdateParameter.primary(newObject, oldObject);
+        return update(parameter);
+    }
 
-    /* 以指定对象为条件，查询符合条件的对象集合 */
-    <T> List<T> selectForList(T example);
+    public int update(SqlUpdateParameter parameter) {
+        SqlCombo sqlCombo = builder.createUpdateSql(parameter);
+        return executor.executeNonQuery(sqlCombo);
+    }
 
-    <T> List<T> selectForClass(Class<T> clazz);
+    public <T> T selectByPrimary(Class<T> clazz, Serializable primary) {
+        SqlCondition condition = SqlCondition.primary(clazz, primary);
+        List<T> list = select(condition, clazz);
+        if (list.isEmpty()) {
+            return null;
+        }
+        else {
+            return list.get(0);
+        }
+    }
 
-    /* 分页数据查询 */
-    PageResult selectForPage(SqlQueryParameter queryParameter);
+    public <T> List<T> selectByPrimaries(Class<T> clazz, List<Serializable> primaries) {
+        SqlCondition condition = SqlCondition.multiPrimary(clazz, primaries);
+        return select(condition, clazz);
+    }
 
+    public <T> T selectByExample(Object example) {
+        List<Object> list = selectListByExample(example);
+        return list.isEmpty() ? null : (T) list.get(0);
+    }
+
+    public <T> List<T> selectListByExample(T example) {
+        SqlCondition condition = SqlCondition.example(example);
+        return (List<T>) select(condition, example.getClass());
+    }
+
+    public <T> List<T> selectAll(Class<T> clazz) {
+        SqlCondition condition = SqlCondition.empty(clazz);
+        return select(condition, clazz);
+    }
+
+    public <T> T selectBySqlCondition(SqlCondition condition, Class<T> clazz) {
+        List<T> list = selectListBySqlCondition(condition, clazz);
+        if (list.isEmpty()) {
+            return null;
+        }
+        else {
+            return list.get(0);
+        }
+    }
+
+    public <T> List<T> selectListBySqlCondition(SqlCondition condition, Class<T> clazz) {
+        return select(condition, clazz);
+    }
+
+    public PageResult selectPage(SqlQueryParameter queryParameter) {
+        // 查询数据
+        SqlCombo dataSqlCombo = builder.createSelectSql(queryParameter);
+        List<?> data = executor.executeObjectQuery(dataSqlCombo, queryParameter.getTargetClass());
+
+        // 查询总数
+        SqlQueryParameter countQueryParameter = queryParameter.count();
+        SqlCombo countSqlCombo = builder.createSelectSql(countQueryParameter);
+        Long count = (Long) executor.executeValueQuery(countSqlCombo);
+
+        // 封装分页结果
+        return PageResult.Builder.start()
+                .fillPageInfo(queryParameter.getPageInfo())
+                .fillCount(count)
+                .fillData(data).complete();
+    }
+
+    private <T> List<T> select(SqlCondition condition, Class<T> clazz) {
+        SqlQueryParameter parameter = SqlQueryParameter.ofSqlCondition(condition);
+        SqlCombo sqlCombo = builder.createSelectSql(parameter);
+        return executor.executeObjectQuery(sqlCombo, clazz);
+    }
 }
